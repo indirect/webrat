@@ -6,14 +6,17 @@ module Webrat #:nodoc:
     def self.document(stringlike) #:nodoc:
       return stringlike.dom if stringlike.respond_to?(:dom)
 
-      if Nokogiri::HTML::Document === stringlike
+      case stringlike
+      when Nokogiri::HTML::Document, Nokogiri::XML::NodeSet
         stringlike
-      elsif Nokogiri::XML::NodeSet === stringlike
-        stringlike
-      elsif stringlike.respond_to?(:body)
-        Nokogiri::HTML(stringlike.body.to_s)
       else
-        Nokogiri::HTML(stringlike.to_s)
+        stringlike = stringlike.body if stringlike.respond_to?(:body)
+
+        if stringlike.to_s =~ /\<\?xml/
+          Nokogiri::XML(stringlike.to_s)
+        else
+          Nokogiri::HTML(stringlike.to_s)
+        end
       end
     end
 
